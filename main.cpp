@@ -57,3 +57,46 @@ DWORD WINAPI marker(void* params_){
     return 0;
 }
 
+vector<HANDLE> start_threads(int count){
+    vector<HANDLE> threads_handles(count);
+    for (int i = 0; i < count; i++){
+        HANDLE hThread;
+        DWORD IDThread;
+        hThread = CreateThread(
+                NULL,
+                0,
+                marker,
+                (void*)new numberToThread(i + 1),
+                0,
+                &IDThread);
+        if(hThread != NULL) {
+            cout << "Thread " << i + 1 << " created successfully" << endl;
+            threads_handles[i] = hThread;
+        }
+        else {
+            cout << "Something went wrong. Error code: " << GetLastError();
+        }
+    }
+    return threads_handles;
+}
+
+HANDLE* CreateEvents(int count, bool manualReset, bool initialState){
+    HANDLE* events = new HANDLE[count];
+    for (int i = 0; i < count; i++){
+        events[i] = CreateEventA(NULL, manualReset, initialState, NULL);
+    }
+    return events;
+}
+
+void showArray(vector<int>& v){
+    for (int i = 0; i < v.size(); i++)
+        cout << v[i] << " ";
+    cout << endl;
+}
+
+void SetRemovedEvents(vector<HANDLE>& removedEvents){
+    for (int i = 0; i < removedEvents.size(); i++){
+        SetEvent(removedEvents[i]);
+    }
+}
+
