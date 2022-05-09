@@ -100,3 +100,39 @@ void SetRemovedEvents(vector<HANDLE>& removedEvents){
     }
 }
 
+int main() {
+
+    InitializeCriticalSection(&cs);
+
+    cout << "Enter array size: ";
+    int arr_size; cin >> arr_size;
+    array = vector<int>(arr_size, 0);
+
+    cout << "Enter markers count: ";
+    int marker_count; cin >> marker_count;
+
+    markedEvents = CreateEvents(marker_count, FALSE, FALSE);
+    continueEvent = CreateEventA(NULL, TRUE, FALSE, NULL);
+    closeThreadEvents = CreateEvents(marker_count, TRUE, FALSE);
+    vector<HANDLE> threads_handles = start_threads(marker_count);
+
+    vector<HANDLE> removedMarkedEvents;
+
+    int active_markers = marker_count;
+    while (active_markers != 0){
+        SetRemovedEvents(removedMarkedEvents);
+        WaitForMultipleObjects(marker_count, markedEvents, TRUE, INFINITE);
+        showArray(array);
+
+        cout << "Enter № of thread to be closed: " << endl;
+        int num; cin >> num;
+        SetEvent(closeThreadEvents[num - 1]);
+        WaitForSingleObject(threads_handles[num - 1], INFINITE);
+        removedMarkedEvents.push_back(markedEvents[num - 1]);
+        active_markers--;
+        PulseEvent(continueEvent);
+    }
+
+    cout << "RESULT ARRAY" << endl;
+    showArray(array);
+}
