@@ -10,16 +10,8 @@ HANDLE* closeThreadEvents;
 HANDLE continueEvent;
 static vector<int> array;
 
-struct numberToThread{
-    numberToThread(int number_) {
-        number = number_;
-    }
-    int number;
-};
-
-DWORD WINAPI marker(void* params_){
-    numberToThread params = *reinterpret_cast<numberToThread*>(params_);
-    int number = params.number;
+DWORD WINAPI marker(LPVOID params_){
+    int number = *static_cast<int*>(params_);
     int marked = 0;
     srand(number);
 
@@ -49,9 +41,9 @@ DWORD WINAPI marker(void* params_){
             }
         }
     }
-    for (int i = 0; i < array.size(); i++){
-        if (array[i] == number)
-            array[i] = 0;
+    for (int & i : array){
+        if (i == number)
+            i = 0;
     }
 
     return 0;
@@ -62,11 +54,12 @@ vector<HANDLE> start_threads(int count){
     for (int i = 0; i < count; i++){
         HANDLE hThread;
         DWORD IDThread;
+        int* number = new int(i + 1);
         hThread = CreateThread(
                 NULL,
                 0,
                 marker,
-                (void*)new numberToThread(i + 1),
+                number,
                 0,
                 &IDThread);
         if(hThread != NULL) {
@@ -89,14 +82,14 @@ HANDLE* CreateEvents(int count, bool manualReset, bool initialState){
 }
 
 void showArray(vector<int>& v){
-    for (int i = 0; i < v.size(); i++)
-        cout << v[i] << " ";
+    for (int i : v)
+        cout << i << " ";
     cout << endl;
 }
 
 void SetRemovedEvents(vector<HANDLE>& removedEvents){
-    for (int i = 0; i < removedEvents.size(); i++){
-        SetEvent(removedEvents[i]);
+    for (auto & removedEvent : removedEvents){
+        SetEvent(removedEvent);
     }
 }
 
